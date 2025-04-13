@@ -22,7 +22,7 @@ description: "사진 찍는 사람"
 baseurl: # "/blog"
 url: "https://photogrammer.kr/"
 logo: "/images/photogrammer_logo.jpg" # "/images/so-simple-site-logo.png"
-date_format: "%B %-d, %Y"
+date_format: "%Y-%m-%d"
 read_time: true
 words_per_minute: 200
 mathjax:
