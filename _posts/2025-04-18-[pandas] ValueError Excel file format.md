@@ -154,13 +154,23 @@ pandas 공식 문서에 의하면 read_excel 함수를 사용할 때 engine=None
 
 여러 카드사에서 내려받은 엑셀 파일을 읽어올 때 잘 열리는 파일, 오류가 발생하는 파일이 섞여있다. 확장자는 xls지만 BOF가 안 맞아 html 개행문자가 들어간 경우 read_html 함수를 사용해 파일 읽기를 수행하고, 실제로 xls인 경우 read_excel 함수를 이용해야 한다.
 
-실제 파일의 확장자를 xlsx로 바꿔주면 코드는 간결해지지만 나는 자동화를 원한다. read_html로 읽지 않고 해당 파일을 xlsx로 바꾼 뒤 read_excel 해도 된다는데 그것도 귀찮다.
+실제 파일의 확장자를 xlsx로 바꿔주면 코드는 간결해지지만 나는 자동화를 원한다. ~~read_html로 읽지 않고 해당 파일을 xlsx로 바꾼 뒤 read_excel 해도 된다는데 그것도 귀찮다.~~
+
+> __추가__  
+> read_html로 엑셀을 읽었을 때 발생할 수 있는 문제  
+> - 컬럼 헤더 꼬임  
+> - 불필요한 행  
+> - 병합 셀 인식 
+> - pandas에서 제공하는 엑셀 관련 함수 사용 불가 (sheet_name 지정 불가)  
+>  
+> 권장 방식 : xls 또는 xlsx 로 변환 후 read_excel로 읽기
 
 아래 함수로 오류를 피할 수 있었다.
 
 ```python
 import pandas as pd
 
+# (수정) Exception 부분 수정정
 # 엑셀 파일 열기
 def openFile(filename):
     ext = filename.split('.')[-1].lower()
@@ -168,7 +178,16 @@ def openFile(filename):
         if ext == 'xls':
             return pd.read_excel(filename, engine='xlrd')
         elif ext == 'xlsx' : 
-            return pd.read_excel(filename, engine='openpyxl', encoding='utf-8-sig')
-    except Exception :
-        return pd.read_html(filename, encoding='utf8')
+            # (수정) encoding 인자 없음
+            # return pd.read_excel(filename, engine='openpyxl', encoding='utf-8-sig')
+            return pd.read_excel(filename, engine='openpyxl')
+    # html 형식으로 읽기
+    # except Exception :
+    #     return pd.read_html(filename, encoding='utf8')
+    # xlsx로 변환 후 읽기
+    except Exception : 
+        temp_file = pd.read_html(filename, encoding='utf8')
+        df = temp_file[0] # DataFrame 형태로 바꾸기기
+        df.to_excel(filename+'x', index=False, engine='openpyxl')
+        return pd.read_excel(filename+'x', engine='openpyxl')
 ```
